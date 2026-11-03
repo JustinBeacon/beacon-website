@@ -338,16 +338,90 @@ select:focus { outline: none; border-color: var(--orange); }
   max-height: 82vh;
   transform-origin: bottom right;
 }
+/* CEO holo card */
+@property --holo-a { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+@keyframes holo-rim { to { --holo-a: 360deg; } }
+@keyframes holo-sweep { 0%, 62% { transform: translateX(-130%) skewX(-18deg); } 100% { transform: translateX(330%) skewX(-18deg); } }
+
 .abp { position: relative; margin: 0; border-radius: 24px; aspect-ratio: 4/5; width: 100%; max-height: 52vh; }
-.abp::before { content: ""; position: absolute; inset: 0; border: 2px solid var(--orange); border-radius: 24px; transform: translate(14px, 14px); z-index: -1; }
-.abp img { width: 100%; height: 100%; object-fit: cover; border-radius: 24px; box-shadow: 0 24px 60px rgba(0, 74, 173, 0.15); }
-.abp figcaption {
-  position: absolute; left: 14px; right: 14px; bottom: 14px; padding: 10px 16px;
-  border-radius: 16px; background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.95); display: flex; flex-direction: column;
+.holo-card {
+  --rx: 0deg; --ry: 0deg; --mx: 50%; --my: 38%;
+  position: relative; isolation: isolate; width: 100%; height: 100%;
+  border-radius: 24px; overflow: hidden;
+  background: linear-gradient(160deg, #0b2f78 0%, #004aad 52%, #071f4f 100%);
+  transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry));
+  transition: transform 0.6s var(--ease), box-shadow 0.6s var(--ease);
+  box-shadow: 0 24px 60px rgba(0, 74, 173, 0.30), 0 2px 0 rgba(255, 255, 255, 0.08) inset;
+  will-change: transform;
 }
-.abp figcaption span { color: var(--orange); font-weight: 600; font-size: 0.82rem; }
+.holo-card.is-active {
+  transition: transform 0.12s linear, box-shadow 0.4s var(--ease);
+  box-shadow: 0 34px 80px rgba(0, 74, 173, 0.42), 0 0 56px rgba(255, 117, 31, 0.20);
+}
+.holo-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; z-index: 0; }
+
+/* Iridescent rim */
+.holo-card::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; z-index: 7; pointer-events: none;
+  background: conic-gradient(from var(--holo-a), #ff751f, #FBBC05, #ffffff, #5cc8ff, #004aad, #b58cff, #ff751f);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
+  animation: holo-rim 8s linear infinite;
+}
+
+/* Foil layers */
+.holo-foil, .holo-grain, .holo-sparkle, .holo-glare, .holo-sheen { position: absolute; inset: 0; pointer-events: none; }
+.holo-foil {
+  z-index: 2; opacity: 0.30; mix-blend-mode: color-dodge; transition: opacity 0.4s;
+  background: linear-gradient(112deg,
+    rgba(255, 45, 149, 0) 0%, rgba(255, 45, 149, 0.55) 7%, rgba(255, 180, 0, 0.55) 14%, rgba(77, 255, 154, 0.5) 21%,
+    rgba(45, 180, 255, 0.55) 28%, rgba(180, 77, 255, 0.55) 35%, rgba(255, 45, 149, 0) 42%,
+    rgba(255, 45, 149, 0) 50%, rgba(255, 45, 149, 0.55) 57%, rgba(255, 180, 0, 0.55) 64%, rgba(77, 255, 154, 0.5) 71%,
+    rgba(45, 180, 255, 0.55) 78%, rgba(180, 77, 255, 0.55) 85%, rgba(255, 45, 149, 0) 92%);
+  background-size: 280% 280%; background-position: var(--mx) var(--my);
+}
+.holo-grain {
+  z-index: 3; opacity: 0.55; mix-blend-mode: overlay;
+  background: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.10) 0 1px, transparent 1px 5px);
+}
+.holo-sparkle {
+  z-index: 3; opacity: 0; mix-blend-mode: color-dodge; transition: opacity 0.4s;
+  background-image: radial-gradient(circle, #fff 0 1px, transparent 1.8px), radial-gradient(circle, rgba(255, 255, 255, 0.9) 0 0.8px, transparent 1.5px);
+  background-size: 38px 38px, 61px 61px;
+  background-position: calc(var(--mx) * 0.4) calc(var(--my) * 0.4), calc(var(--mx) * -0.3) calc(var(--my) * 0.3);
+  -webkit-mask-image: radial-gradient(circle at var(--mx) var(--my), #000 0%, transparent 62%);
+  mask-image: radial-gradient(circle at var(--mx) var(--my), #000 0%, transparent 62%);
+}
+.holo-glare {
+  z-index: 3; opacity: 0; mix-blend-mode: overlay; transition: opacity 0.35s;
+  background: radial-gradient(farthest-corner circle at var(--mx) var(--my), rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.10) 30%, transparent 62%);
+}
+.holo-sheen { z-index: 3; overflow: hidden; }
+.holo-sheen::after {
+  content: ""; position: absolute; top: -10%; bottom: -10%; left: 0; width: 28%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+  mix-blend-mode: overlay; animation: holo-sweep 7s ease-in-out infinite;
+}
+.holo-card.is-active .holo-foil { opacity: 0.42; }
+.holo-card.is-active .holo-sparkle { opacity: 0.7; }
+.holo-card.is-active .holo-glare { opacity: 1; }
+
+/* Black gradient + name (replaces the old glass name box) */
+.holo-fade {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 58%; z-index: 4; pointer-events: none;
+  background: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.88) 18%, rgba(0, 0, 0, 0.55) 46%, rgba(0, 0, 0, 0) 100%);
+}
+.abp figcaption {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 5; padding: 0 22px 20px;
+  display: flex; flex-direction: column; gap: 3px; background: none; border: 0;
+}
+.abp figcaption::before { content: ""; width: 28px; height: 2px; border-radius: 2px; background: var(--orange); margin-bottom: 8px; }
+.abp figcaption b { color: #fff; font-size: 1.28rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; }
+.abp figcaption span { color: var(--orange); font-weight: 600; font-size: 0.76rem; letter-spacing: 0.14em; text-transform: uppercase; }
+@media (prefers-reduced-motion: reduce) {
+  .holo-card::before, .holo-sheen::after { animation: none; }
+  .holo-card { transition: none; }
+}
 
 /* 3. Why UAE Section */
 #why .wrap { display: flex; justify-content: flex-end; }
@@ -3156,12 +3230,20 @@ select:focus { outline: none; border-color: var(--orange); }
   <img src="assets/landmark/2.png" class="landmark-art landmark-burj-al-arab" alt="Burj Al Arab" onerror="this.src='2.png'">
   <div class="wrap">
     <div class="about-left-wrapper">
-      <figure class="abp stagger-abt">
-        <img src="assets/team/kinga.png" alt="Kinga Szabo, Founder and CEO of BEACON" width="860" height="1075" loading="lazy" decoding="async" onerror="this.src='assets/kingahero.png'">
-        <figcaption>
-          <b>Kinga Szabo</b>
-          <span>Founder &amp; CEO</span>
-        </figcaption>
+      <figure class="abp">
+        <div class="holo-card">
+          <img src="assets/team/kinga.png" alt="Kinga Szabo, Founder and CEO of BEACON" width="860" height="1075" loading="lazy" decoding="async" onerror="this.src='assets/kingahero.png'">
+          <div class="holo-foil" aria-hidden="true"></div>
+          <div class="holo-grain" aria-hidden="true"></div>
+          <div class="holo-sparkle" aria-hidden="true"></div>
+          <div class="holo-glare" aria-hidden="true"></div>
+          <div class="holo-sheen" aria-hidden="true"></div>
+          <div class="holo-fade" aria-hidden="true"></div>
+          <figcaption>
+            <b>Kinga Szabo</b>
+            <span>Founder &amp; CEO</span>
+          </figcaption>
+        </div>
       </figure>
       <div class="stagger-abt">
         <p class="eb">Who We Are</p>
@@ -3440,7 +3522,7 @@ select:focus { outline: none; border-color: var(--orange); }
           </div>
         </div>
         <div class="ta-text-col">
-          <span class="ta-role">HEAD OF BUSINESS DEVELOPMENT AND MARKETING</span>
+          <span class="ta-role">BUSINESS DEVELOPMENT AND MARKETING</span>
           <h3 class="ta-name">Justin Diango</h3>
           <p class="ta-desc">Justin drives our market expansion and brand strategy, forging key partnerships and connecting our business with new opportunities.</p>
         </div>
@@ -8582,6 +8664,37 @@ body { height: auto; min-height: 100%; }
   if ('IntersectionObserver' in window) {
     new IntersectionObserver((es, o) => { if (es.some(e => e.isIntersecting)) { o.disconnect(); start(); } }, { threshold: 0.35 }).observe(card);
   } else { start(); }
+})();
+</script>
+<script id="beacon-holo-card-js">
+(() => {
+  const fig = document.querySelector('#about .abp');
+  const card = fig && fig.querySelector('.holo-card');
+  if (!card) return;
+  if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const MAX = 9; // max tilt in degrees
+  let raf = 0;
+  fig.addEventListener('pointermove', e => {
+    const r = fig.getBoundingClientRect(); // measured on the untilted wrapper so the maths stays stable
+    const px = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+    const py = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => {
+      card.classList.add('is-active');
+      card.style.setProperty('--ry', ((px - 0.5) * 2 * MAX).toFixed(2) + 'deg');
+      card.style.setProperty('--rx', ((0.5 - py) * 2 * MAX).toFixed(2) + 'deg');
+      card.style.setProperty('--mx', (px * 100).toFixed(1) + '%');
+      card.style.setProperty('--my', (py * 100).toFixed(1) + '%');
+    });
+  });
+  fig.addEventListener('pointerleave', () => {
+    cancelAnimationFrame(raf);
+    card.classList.remove('is-active');
+    ['--rx', '--ry'].forEach(k => card.style.setProperty(k, '0deg'));
+    card.style.setProperty('--mx', '50%');
+    card.style.setProperty('--my', '38%');
+  });
 })();
 </script>
 </body>
